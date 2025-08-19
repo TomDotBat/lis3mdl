@@ -186,13 +186,13 @@ impl Lis3mdl {
         let fullscale = FullScaleBits::from_bits(self.read_register(i2c, Register::CTRL_REG2)?).unwrap();
 
         // Gain values from Table 2 in AN4602 Rev 1
-        let sensitivity: f64 = match fullscale {
-            FullScaleBits::FS4G => Ok(1000_f64/6842_f64),
-            FullScaleBits::FS8G => Ok(1000_f64/3421_f64),
-            FullScaleBits::FS12G => Ok(1000_f64/2281_f64),
-            FullScaleBits::FS16G => Ok(1000_f64/1711_f64),
-            _ => Err(Error::InvalidValue)
-        }?;
+        let sensitivity: f64 = match fullscale.bits() {
+            x if x == FullScaleBits::FS4G.bits() => 1000_f64/6842_f64,
+            x if x == FullScaleBits::FS8G.bits() => 1000_f64/3421_f64,
+            x if x == FullScaleBits::FS12G.bits() => 1000_f64/2281_f64,
+            x if x == FullScaleBits::FS16G.bits() => 1000_f64/1711_f64,
+            _ => return Err(Error::InvalidValue),
+        };
 
         Ok(I32xyz {
             x: (mag_data.x as f64 * sensitivity) as i32,

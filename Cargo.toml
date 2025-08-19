@@ -11,4 +11,4 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 embedded-hal = "1.0.0"
-bitflags = "1.0.4"
+bitflags = "2.9.2"
