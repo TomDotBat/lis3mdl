@@ -1,5 +1,5 @@
 [package]
-name = "lis3mdl-driver"
+name = "lis3mdl"
 version = "0.1.0"
 authors = ["Ryan Rightmer <rrightmer@gmail.com>", "Natesh Narain <nnaraindev@gmail.com>"]
 edition = "2018"
@@ -10,5 +10,5 @@ repository = "https://github.com/nnarain/lis3mdl"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-embedded-hal = "0.2.2"
+embedded-hal = "1.0.0"
 bitflags = "1.0.4"
