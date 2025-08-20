@@ -92,6 +92,7 @@ const LIS3MDL_DEVICE_ID: u8 = 0x3D;
 /// LIS3MDL driver
 pub struct Lis3mdl {
     address: u8,
+    sensitivity: f64,
 }
 
 impl Lis3mdl {
@@ -113,6 +114,7 @@ impl Lis3mdl {
     {
         let mut lis3mdl = Lis3mdl {
             address: addr as u8,
+            sensitivity: 0.0,
         };
 
         if lis3mdl.who_am_i(i2c)? != LIS3MDL_DEVICE_ID {
@@ -182,22 +184,10 @@ impl Lis3mdl {
         I2C: I2c
     {
         let mag_data = self.get_raw_mag_axes(i2c)?;
-
-        let fullscale = FullScaleBits::from_bits(self.read_register(i2c, Register::CTRL_REG2)?).unwrap();
-
-        // Gain values from Table 2 in AN4602 Rev 1
-        let sensitivity: f64 = match fullscale.bits() {
-            x if x == FullScaleBits::FS4G.bits() => 1000_f64/6842_f64,
-            x if x == FullScaleBits::FS8G.bits() => 1000_f64/3421_f64,
-            x if x == FullScaleBits::FS12G.bits() => 1000_f64/2281_f64,
-            x if x == FullScaleBits::FS16G.bits() => 1000_f64/1711_f64,
-            _ => return Err(Error::InvalidValue),
-        };
-
         Ok(I32xyz {
-            x: (mag_data.x as f64 * sensitivity) as i32,
-            y: (mag_data.y as f64 * sensitivity) as i32,
-            z: (mag_data.z as f64 * sensitivity) as i32
+            x: (mag_data.x as f64 * self.sensitivity) as i32,
+            y: (mag_data.y as f64 * self.sensitivity) as i32,
+            z: (mag_data.z as f64 * self.sensitivity) as i32
         })
     }
 
@@ -223,6 +213,14 @@ impl Lis3mdl {
         let existing_settings = self.read_control_register_2(i2c)? & fs_mask;
 
         let reg2bits = ControlRegister2Bits::from_bits_truncate(fs.bits());
+        
+        // Gain values from Table 2 in AN4602 Rev 1
+        self.sensitivity = match scale {
+           FullScale::Fs4g => 1000_f64/6842_f64,
+           FullScale::Fs8g => 1000_f64/3421_f64,
+           FullScale::Fs12g => 1000_f64/2281_f64,
+           FullScale::Fs16g => 1000_f64/1711_f64,
+        };
 
         // Update the full scale setting, preserving the other values
         self.set_control_register_2(i2c, reg2bits | existing_settings)
